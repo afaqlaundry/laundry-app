@@ -1,1 +1,30 @@
-
+name: Build Flutter APK
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+      - run: flutter pub get
+      - run: mkdir -p android/app
+      - run: |
+          cat > android/app/google-services.json << 'GSEOF'
+          {"project_info":{"project_number":"000000000000","project_id":"laundry-debug"},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:0","android_client_info":{"package_name":"com.laundry.app"}},"api_key":[{"current_key":"AIza"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}
+          GSEOF
+      - run: mkdir -p assets/fonts assets/images
+      - run: touch assets/fonts/Tajawal-Regular.ttf assets/fonts/Tajawal-Medium.ttf assets/fonts/Tajawal-Bold.ttf assets/fonts/Tajawal-ExtraBold.ttf
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
